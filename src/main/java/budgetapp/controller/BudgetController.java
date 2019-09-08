@@ -2,6 +2,8 @@ package budgetapp.controller;
 
 import budgetapp.model.Budget;
 import budgetapp.service.BudgetService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +21,11 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/budget")
 public class BudgetController {
+
     @Autowired
     private BudgetService budgetService;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping(path = "/add")
     public ResponseEntity addBudget(@RequestBody Budget budget) {
@@ -30,25 +35,29 @@ public class BudgetController {
 
     @GetMapping(path = "/all")
     @ResponseBody
-    public List<Budget> getAllBudgets () {
+    public ResponseEntity<String> getAllBudgets () throws JsonProcessingException {
         List<Budget> allBudgets = budgetService.findAll();
-        return allBudgets;
+        String allBudgetsAsJson = objectMapper.writeValueAsString(allBudgets);
+        return new ResponseEntity<>(allBudgetsAsJson, HttpStatus.OK);
     }
 
     @GetMapping(path = "/{budgetId}")
     @ResponseBody
-    public Budget findBudgetById (@PathVariable("budgetId") long budgetId) {
+    public ResponseEntity<String> findBudgetById (@PathVariable("budgetId") long budgetId) throws JsonProcessingException {
         Budget budget = budgetService.findById(budgetId);
-        return budget;
+        String budgetAsJson = objectMapper.writeValueAsString(budget);
+        return new ResponseEntity<>(budgetAsJson, HttpStatus.OK);
     }
 
     @DeleteMapping(path = "/{budgetId}")
-    public void removeBudget (@PathVariable("budgetId") long budgetId) {
+    public ResponseEntity removeBudget (@PathVariable("budgetId") long budgetId) {
         budgetService.deleteById(budgetId);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping
-    public void removeBudget (@RequestBody Budget budget) {
+    public ResponseEntity removeBudget (@RequestBody Budget budget) {
         budgetService.delete(budget);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 }
